@@ -10,8 +10,19 @@
 
 
 
+#include "Logger.h"
+
+
+
+using namespace Logger;
+
 
 namespace Mapping {
+
+
+LoggerInterface* logger = NullLogger();
+
+
 
 
 };

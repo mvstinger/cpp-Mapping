@@ -16,21 +16,26 @@ namespace Mapping {
 
 class GeodeticDatumInterface {
 public:
+	virtual ~GeodeticDatumInterface(void) = 0;
+
 	virtual double radius_at(const double, const double) const = 0;
 };
 
 
 
-class GeodeticDatumBase : GeodeticDatumInterface {
+class GeodeticDatumBase : public GeodeticDatumInterface {
 public:
+	virtual ~GeodeticDatumBase(void) = 0;
+
 	virtual double radius_at(const double, const double) const = 0;
 };
 
 
 
-class EllipsoidDatum : GeodeticDatumBase {
+class EllipsoidDatum : public GeodeticDatumBase {
 public:
 	EllipsoidDatum(const double, const double);
+	~EllipsoidDatum(void);
 
 	double radius_at(const double, const double) const;
 
@@ -42,7 +47,7 @@ private:
 
 
 
-const EllipsoidDatum* WGS84 = *EllipsoidDatum(6378137.0, 6356752.314245);
+const EllipsoidDatum WGS84 = EllipsoidDatum(6378137.0, 6356752.314245);
 
 
 

@@ -7,15 +7,13 @@
 
 
 
+#include <string>
+#include <Eigen/Eigen>
+#include "../MAPP__types.h"
+
+
+
 namespace Mapping {
-
-
-
-
-
-#include "../inc/PT_map.h"
-#include "../inc/PT_earth.h"
-#include<string>
 
 
 
@@ -25,93 +23,73 @@ using std::sqrt;
 using std::to_string;
 
 
-namespace PropagationTool {
+
+MapExtents::MapExtents(void) :
+		lat_min(-90.0),
+		lat_max(+90.0),
+		lon_min(-180.0),
+		lon_max(+180.0) {};
+
+MapExtents::MapExtents(const double lat_min, const double lat_max, const double lon_min, const double lon_max) :
+		lat_min(lat_min),
+		lat_max(lat_max),
+		lon_min(lon_min),
+		lon_max(lon_max) {};
+
+
+
+MapResolution::MapResolution(void) :
+		lat_res(1.0),
+		lon_res(1.0) {};
+
+MapResolution::MapResolution(const double lat_res, const double lon_res) :
+		lat_res(lat_res),
+		lon_res(lon_res) {};
+
 
 
 MapInterface::MapInterface(void) :
-	extents_(MapExtents()),
-	resolution_(MapResolution()) {};
-MapInterface::MapInterface(MapExtents me) :
-	extents_(me),
-	resolution_(MapResolution()) {};
-MapInterface::MapInterface(MapResolution res) :
-	extents_(MapExtents()),
-	resolution_(res) {};
-MapInterface::MapInterface(MapExtents me, MapResolution res) :
-	extents_(me),
-	resolution_(res) {};
-MapInterface::MapInterface(EarthModelInterface& emi) :
-	extents_(MapExtents()),
-	resolution_(MapResolution()),
-	spheroid_(&emi) {};
-MapInterface::MapInterface(EarthModelInterface& emi, MapExtents me) :
-	extents_(me),
-	resolution_(MapResolution()),
-	spheroid_(&emi) {};
-MapInterface::MapInterface(EarthModelInterface& emi, MapResolution res) :
-	extents_(MapExtents()),
-	resolution_(res),
-	spheroid_(&emi) {};
-MapInterface::MapInterface(EarthModelInterface& emi, MapExtents me, MapResolution res) :
-	spheroid_(&emi),
-	extents_(me),
-	resolution_(res) {};
+		map_extents_(MapExtents()),
+		map_resolution_(MapResolution()),
+		datum_(&WGS84) {};
+
+MapInterface::MapInterface(const MapExtents me, const MapResolution res) :
+		map_extents_(me),
+		map_resolution_(res),
+		datum_(&WGS84) {};
+
+MapInterface::MapInterface(const GeodeticDatumInterface* gd, const MapExtents me, const MapResolution res) :
+	map_extents_(me),
+	map_resolution_(res),
+	datum_(gd) {};
 
 MapInterface::~MapInterface() {};
 
 
 
-
-
-
 MapBase::MapBase(void) :
 		MapInterface(MapExtents(), MapResolution()) {};
-MapBase::MapBase(MapExtents me) :
-		MapInterface(me) {};
-MapBase::MapBase(MapResolution res) :
-		MapInterface(res) {};
-MapBase::MapBase(MapExtents me, MapResolution res) :
+
+MapBase::MapBase(const MapExtents me, const MapResolution res) :
 		MapInterface(me, res) {};
-MapBase::MapBase(EarthModelInterface& emi) :
-		MapInterface(emi) {};
-MapBase::MapBase(EarthModelInterface& emi, MapExtents me) :
-		MapInterface(emi, me) {};
-MapBase::MapBase(EarthModelInterface& emi, MapResolution res) :
-		MapInterface(emi, res) {};
-MapBase::MapBase(EarthModelInterface& emi, MapExtents me, MapResolution res) :
-		MapInterface(emi, me, res) {};
+
+MapBase::MapBase(const GeodeticDatumInterface* gd, const MapExtents me, const MapResolution res) :
+		MapInterface(gd, me, res) {};
 
 MapBase::~MapBase() {};
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-SimpleMap MapBase::from_random(int lat_count, int lon_count, double alt_span) {
+SimpleMap MapBase::from_random(const int lat_count, const int lon_count, const double alt_span) {
 	//TODO: Improve terrain generation (eg. harmonic-based)
 	SimpleMap output_map = SimpleMap();
   output_map.map_data_ = MatrixXd::Random(lat_count, lon_count) * alt_span;
-  MapExtents aux_me(-90.0, +90.0, lat_count, -180.0, +180.0, lon_count);
+  MapExtents aux_me(-90.0, +90.0, -180.0, +180.0);
   output_map.update_lat_reso_();
   output_map.update_lon_reso_();
 //  logger->info(std::string("Created random map of size ") + std::to_string(lat_count) + std::string(", ") + std::to_string(lon_count));
   return output_map;
 };
 
-int MapBase::write_csv(std::FILE* fid) {
+uint MapBase::write_csv(std::FILE* fid) const {
   int error_state=0;
   for(Idx lat_idx=0; lat_idx < (this->get_lat_count()); lat_idx++) {
     for(Idx lon_idx=0; lon_idx < (this->get_lon_count()); lon_idx++) {
@@ -124,75 +102,91 @@ int MapBase::write_csv(std::FILE* fid) {
   return error_state;
 }
 
-float MapBase::get_lat_min() { return this->extents_.lat_min; }
-float MapBase::get_lat_max() { return this->extents_.lat_max; }
-uint MapBase::get_lat_count() { return this->extents_.lat_count; }
-float MapBase::get_lon_min() { return this->extents_.lon_min; }
-float MapBase::get_lon_max() { return this->extents_.lon_max; }
-uint MapBase::get_lon_count() { return this->extents_.lon_count; }
+double MapBase::get_lat_min(void) const { return this->map_extents_.lat_min; }
 
-int MapBase::set_lat_min(float input_lat) {
-  int error_state = 0;
+double MapBase::get_lat_max(void) const { return this->map_extents_.lat_max; }
+
+double MapBase::get_lat_span(void) const { return this->map_extents_.lat_max - this->map_extents_.lat_min; }
+
+uint MapBase::get_lat_count(void) const { return ceil(this->get_lat_span() / this->map_resolution_.lat_res); }
+
+double MapBase::get_lon_min(void) const { return this->map_extents_.lon_min; }
+
+double MapBase::get_lon_max(void) const { return this->map_extents_.lon_max; }
+
+double MapBase::get_lon_span(void) const { return this->map_extents_.lon_max - this->map_extents_.lon_min; }
+
+uint MapBase::get_lon_count(void) const { return ceil(this->get_lon_span() / this->map_resolution_.lon_res); }
+
+
+
+MappingError MapBase::set_lat_min(const float input_lat) {
+	MappingError error_state = NO_ERROR;
   if((input_lat < -90.0) || (input_lat > 90.0)) { error_state = WARNING_LAT_OOB; }
-  this->extents_.lat_min = input_lat;
+  this->map_extents_.lat_min = input_lat;
   this->update_lat_reso_();
   return error_state;
 }
-int MapBase::set_lat_max(float input_lat) {
-  int error_state = 0;
+
+MappingError MapBase::set_lat_max(const float input_lat) {
+	MappingError error_state = NO_ERROR;
   if((input_lat < -90.0) || (input_lat > 90.0)) { error_state = WARNING_LAT_OOB; }
-  this->extents_.lat_max = input_lat;
+  this->map_extents_.lat_max = input_lat;
   this->update_lat_reso_();
   return error_state;
 }
-int MapBase::set_lat_count(float input_count) {
-  int error_state = 0;
-  if(input_count<=0) { error_state = ERROR_COUNT_OOB; }
-  this->extents_.lat_count = input_count;
-  this->update_lat_reso_();
-  this->update_map_size_();
-  return error_state;
-}
-int MapBase::set_lon_min(float input_lon) {
-  int error_state = 0;
+
+//MappingError MapBase::set_lat_count(const float input_count) {
+//  MappingError error_state = NO_ERROR;
+//  if(input_count<=0) { error_state = ERROR_COUNT_OOB; }
+//  this->map_extents_.lat_count = input_count;
+//  this->update_lat_reso_();
+//  this->update_map_size_();
+//  return error_state;
+//}
+
+MappingError MapBase::set_lon_min(const float input_lon) {
+	MappingError error_state = NO_ERROR;
   if((input_lon < -180) || (input_lon > 90.0)) { error_state = WARNING_LON_OOB; }
-  this->extents_.lon_min = input_lon;
+  this->map_extents_.lon_min = input_lon;
   this->update_lon_reso_();
-  return error_state;
-}
-int MapBase::set_lon_max(float input_lon) {
-  int error_state = 0;
-  if((input_lon < -180.0) || (input_lon > 180.0)) { error_state = WARNING_LON_OOB; }
-  this->extents_.lon_max = input_lon;
-  this->update_lon_reso_();
-  return error_state;
-}
-int MapBase::set_lon_count(float input_count) {
-  int error_state = 0;
-  if(input_count <= 0) { error_state = ERROR_COUNT_OOB; }
-  this->extents_.lon_count = input_count;
-  this->update_lon_reso_();
-  this->update_map_size_();
   return error_state;
 }
 
-double MapBase::alt_at(double input_lat, double input_lon) {
+MappingError MapBase::set_lon_max(const float input_lon) {
+	MappingError error_state = NO_ERROR;
+  if((input_lon < -180.0) || (input_lon > 180.0)) { error_state = WARNING_LON_OOB; }
+  this->map_extents_.lon_max = input_lon;
+  this->update_lon_reso_();
+  return error_state;
+}
+
+//MappingError MapBase::set_lon_count(const float input_count) {
+//  int error_state = NO_ERROR;
+//  if(input_count <= 0) { error_state = ERROR_COUNT_OOB; }
+//  this->map_extents_.lon_count = input_count;
+//  this->update_lon_reso_();
+//  this->update_map_size_();
+//  return error_state;
+//}
+
+double MapBase::alt_at(const double input_lat, const double input_lon) const {
   //	1. Calculate geometric median
 	//	1.1 Seed the algorithm with the average altitude
   double lat_pos, lat_neg, lon_pos, lon_neg;
   int lat_pos_idx, lat_neg_idx, lon_pos_idx, lon_neg_idx;
 
   //	1.1.1 Adjacent latitudes
-  lat_pos_idx = ceil( (input_lat - this->extents_.lat_min) / this->resolution_.lat_res );
+  lat_pos_idx = ceil( (input_lat - this->map_extents_.lat_min) / this->map_resolution_.lat_res );
   lat_neg_idx = (lat_pos_idx==0) ? lat_pos_idx : lat_pos_idx - 1;
-  lat_pos = this->extents_.lat_min + lat_pos_idx * this->resolution_.lat_res;
-  lat_neg = this->extents_.lat_min + lat_neg_idx * this->resolution_.lat_res;
+  lat_pos = this->map_extents_.lat_min + lat_pos_idx * this->map_resolution_.lat_res;
+  lat_neg = this->map_extents_.lat_min + lat_neg_idx * this->map_resolution_.lat_res;
 
   // 	1.1.2 Adjacent longitudes
-  lon_pos_idx = ceil((input_lon - this->extents_.lon_min) / this->resolution_.lon_res);
+  lon_pos_idx = ceil((input_lon - this->map_extents_.lon_min) / this->map_resolution_.lon_res);
   lon_neg_idx = (lon_pos_idx==0) ? lon_pos_idx : lon_pos_idx - 1;
-  lon_pos = this->extents_.lon_min + lon_pos_idx * this->resolution_.lon_res;
-  lon_neg = this->extents_.lon_min + lon_neg_idx * this->resolution_.lon_res;
+  lon_pos = this->map_extents_.lon_min + lon_pos_idx * this->map_resolution_.lon_res;
+  lon_neg = this->map_extents_.lon_min + lon_neg_idx * this->map_resolution_.lon_res;
 
   //	1.1.3 Calculate seed altitude
   Matrix2d adjacent_block = this->map_data_.block(lat_neg_idx,lon_neg_idx, 2,2);
@@ -259,63 +253,52 @@ double MapBase::alt_at(double input_lat, double input_lon) {
   //  Return value
   return output_alt;
 }
-double MapBase::radius_at(double input_lat, double input_lon) {
-	return this->spheroid_->radius_at(input_lat, input_lon) +
+
+double MapBase::radius_at(const double input_lat, const double input_lon) const {
+	return this->datum_->radius_at(input_lat, input_lon);
+}
+
+double MapBase::height_at(const double input_lat, const double input_lon) const {
+	return this->datum_->radius_at(input_lat, input_lon) +
 			this->alt_at(input_lat, input_lon);
 }
 
-int MapBase::update_lat_reso_() {
-  int error_state=0;
-  this->resolution_.lat_res = (this->extents_.lat_max - this->extents_.lat_min) / this->extents_.lat_count;
+uint MapBase::update_lat_reso_(void) {
+  uint error_state=0;
+  this->map_resolution_.lat_res = (this->map_extents_.lat_max - this->map_extents_.lat_min) / this->get_lat_count();
   return error_state;
 };
-int MapBase::update_lon_reso_() {
-  int error_state=0;
-  this->resolution_.lon_res = (this->extents_.lon_max - this->extents_.lon_min) / this->extents_.lon_count;
+
+uint MapBase::update_lon_reso_(void) {
+  uint error_state=0;
+  this->map_resolution_.lon_res = (this->map_extents_.lon_max - this->map_extents_.lon_min) / this->get_lon_count();
   return error_state;
 };
-int MapBase::update_map_size_() {
-  int error_state = 0;
-  this->map_data_.resize(this->extents_.lat_count, this->extents_.lon_count);
+
+uint MapBase::update_map_size_(void) {
+  uint error_state = 0;
+  this->map_data_.resize((long long int)this->get_lat_count(), (long long int)this->get_lon_count());
   return error_state;
 }
-int MapBase::update_all_() {
-  int error_state=0;
-  this->update_map_size_();
-  this->update_lat_reso_();
-  this->update_lon_reso_();
+
+uint MapBase::update_all_(void) {
+  uint error_state=0;
+  error_state |= this->update_map_size_();
+  error_state |= this->update_lat_reso_();
+  error_state |= this->update_lon_reso_();
   return error_state;
 }
 
 
 
 SimpleMap::SimpleMap() {};
-SimpleMap::SimpleMap(MapExtents me) : MapBase(me) {};
-SimpleMap::SimpleMap(MapResolution res) : MapBase(res) {};
-SimpleMap::SimpleMap(MapExtents me, MapResolution res) : MapBase(me, res) {};
-SimpleMap::SimpleMap(EarthModelInterface& emi) : MapBase(emi) {};
-SimpleMap::SimpleMap(EarthModelInterface& emi, MapExtents me) : MapBase(emi, me) {};
-SimpleMap::SimpleMap(EarthModelInterface& emi, MapResolution res) : MapBase(emi, res) {};
-SimpleMap::SimpleMap(EarthModelInterface& emi, MapExtents me, MapResolution res) : MapBase(emi, me, res) {};
 
+SimpleMap::SimpleMap(const MapExtents me, const MapResolution res) : MapBase(&WGS84, me, res) {};
 
+SimpleMap::SimpleMap(const GeodeticDatumInterface* emi, const MapExtents me, const MapResolution res) : MapBase(emi, me, res) {};
 
 SimpleMap::~SimpleMap() {};
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-};
+}
