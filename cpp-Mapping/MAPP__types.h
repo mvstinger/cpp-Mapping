@@ -109,12 +109,12 @@ public:
   virtual uint get_lon_count(void) const = 0;
   virtual double get_lon_span(void) const = 0;
 
-  virtual MappingError set_lat_min(const float) = 0;
-  virtual MappingError set_lat_max(const float) = 0;
-  virtual MappingError set_lat_count(const float) = 0;
-  virtual MappingError set_lon_min(const float) = 0;
-  virtual MappingError set_lon_max(const float) = 0;
-  virtual MappingError set_lon_count(const float) = 0;
+  virtual MappingError set_lat_min(const double) = 0;
+  virtual MappingError set_lat_max(const double) = 0;
+//  virtual MappingError set_lat_count(const double) = 0;
+  virtual MappingError set_lon_min(const double) = 0;
+  virtual MappingError set_lon_max(const double) = 0;
+//  virtual MappingError set_lon_count(const double) = 0;
 
   //	Convenience methods
   virtual uint write_csv(std::FILE*) const = 0;
@@ -160,12 +160,12 @@ public:
   double get_lon_span(void) const;
   uint get_lon_count(void) const;
 
-  MappingError set_lat_min(const float);
-  MappingError set_lat_max(const float);
-  MappingError set_lat_count(const float);
-  MappingError set_lon_min(const float);
-  MappingError set_lon_max(const float);
-  MappingError set_lon_count(const float);
+  MappingError set_lat_min(const double);
+  MappingError set_lat_max(const double);
+//  MappingError set_lat_count(const double);
+  MappingError set_lon_min(const double);
+  MappingError set_lon_max(const double);
+//  MappingError set_lon_count(const double);
 
   uint write_csv(std::FILE*) const;
 

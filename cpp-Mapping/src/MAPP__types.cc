@@ -120,7 +120,7 @@ uint MapBase::get_lon_count(void) const { return ceil(this->get_lon_span() / thi
 
 
 
-MappingError MapBase::set_lat_min(const float input_lat) {
+MappingError MapBase::set_lat_min(const double input_lat) {
 	MappingError error_state = NO_ERROR;
   if((input_lat < -90.0) || (input_lat > 90.0)) { error_state = WARNING_LAT_OOB; }
   this->map_extents_.lat_min = input_lat;
@@ -128,7 +128,7 @@ MappingError MapBase::set_lat_min(const float input_lat) {
   return error_state;
 }
 
-MappingError MapBase::set_lat_max(const float input_lat) {
+MappingError MapBase::set_lat_max(const double input_lat) {
 	MappingError error_state = NO_ERROR;
   if((input_lat < -90.0) || (input_lat > 90.0)) { error_state = WARNING_LAT_OOB; }
   this->map_extents_.lat_max = input_lat;
@@ -136,7 +136,7 @@ MappingError MapBase::set_lat_max(const float input_lat) {
   return error_state;
 }
 
-//MappingError MapBase::set_lat_count(const float input_count) {
+//MappingError MapBase::set_lat_count(const double input_count) {
 //  MappingError error_state = NO_ERROR;
 //  if(input_count<=0) { error_state = ERROR_COUNT_OOB; }
 //  this->map_extents_.lat_count = input_count;
@@ -145,7 +145,7 @@ MappingError MapBase::set_lat_max(const float input_lat) {
 //  return error_state;
 //}
 
-MappingError MapBase::set_lon_min(const float input_lon) {
+MappingError MapBase::set_lon_min(const double input_lon) {
 	MappingError error_state = NO_ERROR;
   if((input_lon < -180) || (input_lon > 90.0)) { error_state = WARNING_LON_OOB; }
   this->map_extents_.lon_min = input_lon;
@@ -153,7 +153,7 @@ MappingError MapBase::set_lon_min(const float input_lon) {
   return error_state;
 }
 
-MappingError MapBase::set_lon_max(const float input_lon) {
+MappingError MapBase::set_lon_max(const double input_lon) {
 	MappingError error_state = NO_ERROR;
   if((input_lon < -180.0) || (input_lon > 180.0)) { error_state = WARNING_LON_OOB; }
   this->map_extents_.lon_max = input_lon;
@@ -161,7 +161,7 @@ MappingError MapBase::set_lon_max(const float input_lon) {
   return error_state;
 }
 
-//MappingError MapBase::set_lon_count(const float input_count) {
+//MappingError MapBase::set_lon_count(const double input_count) {
 //  int error_state = NO_ERROR;
 //  if(input_count <= 0) { error_state = ERROR_COUNT_OOB; }
 //  this->map_extents_.lon_count = input_count;
