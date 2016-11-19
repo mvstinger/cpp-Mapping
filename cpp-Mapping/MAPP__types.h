@@ -131,10 +131,10 @@ protected:
   double CALC_ALT_RES_ = 0.001;
   uint CALC_ALT_MAX_ITER_ = 20;
 
-  virtual uint update_lat_reso_(void) = 0;
-  virtual uint update_lon_reso_(void) = 0;
-  virtual uint update_map_size_(void) = 0;
-  virtual uint update_all_(void) = 0;
+  virtual MappingError update_lat_reso_(void) = 0;
+  virtual MappingError update_lon_reso_(void) = 0;
+  virtual MappingError update_map_size_(void) = 0;
+  virtual MappingError update_all_(void) = 0;
 };
 
 
@@ -174,10 +174,10 @@ public:
   double height_at(const double, const double) const;
 
 protected:
-  uint update_lat_reso_(void);
-  uint update_lon_reso_(void);
-  uint update_map_size_(void);
-  uint update_all_(void);
+  MappingError update_lat_reso_(void);
+  MappingError update_lon_reso_(void);
+  MappingError update_map_size_(void);
+  MappingError update_all_(void);
 };
 
 

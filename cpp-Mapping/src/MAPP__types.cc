@@ -263,29 +263,29 @@ double MapBase::height_at(const double input_lat, const double input_lon) const 
 			this->alt_at(input_lat, input_lon);
 }
 
-uint MapBase::update_lat_reso_(void) {
-  uint error_state=0;
+MappingError MapBase::update_lat_reso_(void) {
+	MappingError error_state = NO_ERROR;
   this->map_resolution_.lat_res = (this->map_extents_.lat_max - this->map_extents_.lat_min) / this->get_lat_count();
   return error_state;
 };
 
-uint MapBase::update_lon_reso_(void) {
-  uint error_state=0;
+MappingError MapBase::update_lon_reso_(void) {
+	MappingError error_state = NO_ERROR;
   this->map_resolution_.lon_res = (this->map_extents_.lon_max - this->map_extents_.lon_min) / this->get_lon_count();
   return error_state;
 };
 
-uint MapBase::update_map_size_(void) {
-  uint error_state = 0;
+MappingError MapBase::update_map_size_(void) {
+	MappingError error_state = NO_ERROR;
   this->map_data_.resize((long long int)this->get_lat_count(), (long long int)this->get_lon_count());
   return error_state;
 }
 
-uint MapBase::update_all_(void) {
-  uint error_state=0;
-  error_state |= this->update_map_size_();
-  error_state |= this->update_lat_reso_();
-  error_state |= this->update_lon_reso_();
+MappingError MapBase::update_all_(void) {
+	MappingError error_state = NO_ERROR;
+  error_state = (error_state) ? error_state :this->update_map_size_();
+  error_state = (error_state) ? error_state :this->update_lat_reso_();
+  error_state = (error_state) ? error_state :this->update_lon_reso_();
   return error_state;
 }
 
