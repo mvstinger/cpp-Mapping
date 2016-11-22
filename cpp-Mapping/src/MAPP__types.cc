@@ -7,20 +7,29 @@
 
 
 
+//#include <fstream>
+#include <cstdlib>
 #include <string>
 #include <Eigen/Eigen>
+#include "../Mapping.h"
 #include "../MAPP__types.h"
-
-
-
-namespace Mapping {
+#include "../MAPP__helpers.h"
+#include "../MAPP__terrain_gen.h"
+//#include "Logger.h"
 
 
 
 using Eigen::MatrixXd;
 using Eigen::Matrix2d;
+using Eigen::Ref;
+using std::ceil;
 using std::sqrt;
 using std::to_string;
+using Logger::LoggerInterface;
+using Logger::NullLogger;
+
+
+namespace Mapping {
 
 
 
@@ -79,23 +88,39 @@ MapBase::MapBase(const GeodeticDatumInterface* gd, const MapExtents me, const Ma
 MapBase::~MapBase() {};
 
 SimpleMap MapBase::from_random(const int lat_count, const int lon_count, const double alt_span) {
-	//TODO: Improve terrain generation (eg. harmonic-based)
+//  logger->info(std::string("from_random(): Creating random map of size ") + std::to_string(lat_count) + std::string(", ") + std::to_string(lon_count));
 	SimpleMap output_map = SimpleMap();
   output_map.map_data_ = MatrixXd::Random(lat_count, lon_count) * alt_span;
   MapExtents aux_me(-90.0, +90.0, -180.0, +180.0);
-  output_map.update_lat_reso_();
-  output_map.update_lon_reso_();
-//  logger->info(std::string("Created random map of size ") + std::to_string(lat_count) + std::string(", ") + std::to_string(lon_count));
+  MapResolution aux_res(180.0 / lat_count, 360.0 / lon_count);
+  output_map.map_extents_ = aux_me;
+  output_map.map_resolution_ = aux_res;
   return output_map;
 };
 
+SimpleMap MapBase::from_squarediamond(const int lat_count, const int lon_count, const double alt_span) {
+	fprintf(stdout, "[ from_squarediamond() ]\tlat_count: %i, lon_count: :%i\n", lat_count, lon_count);
+	MappingError error_state = NO_ERROR;
+	MapExtents map_ext(-90.0, +90.0, -180.0, +180.0);
+	MapResolution map_res(180.0/lat_count, 360.0/lon_count);
+	SimpleMap output_map = SimpleMap(map_ext, map_res);
+	fprintf(stdout, "[ from_squarediamond() ]\tget_lat_count: %i, get_lon_count: :%i\n", output_map.get_lat_count(), output_map.get_lon_count());
+	SDConfiguration config = SDConfiguration();
+	fprintf(stdout, "[ from_squarediamond() ]\tmap_data_ptr: 0x%08X\n", output_map.map_data_ref);
+	error_state = terrain_gen_SD(output_map.map_data_ref, alt_span, config);
+	return output_map;
+}
+
 uint MapBase::write_csv(std::FILE* fid) const {
+	//TODO: Debug!
   int error_state=0;
-  for(Idx lat_idx=0; lat_idx < (this->get_lat_count()); lat_idx++) {
-    for(Idx lon_idx=0; lon_idx < (this->get_lon_count()); lon_idx++) {
-//      fprintf(fid, "%6.2f", this->map_data_(lat_idx, lon_idx));
-//      fprintf(stdout, "%6.2f", this->map_data_(lat_idx, lon_idx));
-//    	fprintf(stdout, "%i, %i\n", this->map_data_.rows(), this->map_data_.cols());
+  for(Idx lat_idx=0; lat_idx < (this->map_data_.rows()); lat_idx++) {
+    for(Idx lon_idx=0; lon_idx < (this->map_data_.cols()); lon_idx++) {
+      fprintf(fid, "%6.2f", this->map_data_(lat_idx, lon_idx));
+//      fprintf(stdout, "%6.2f\t(%i of %i = %i, %i of %i = %i)\n",
+//      		this->map_data_(lat_idx, lon_idx),
+//					lat_idx+1, this->map_data_.rows(), this->get_lat_count(),
+//					lon_idx+1, this->map_data_.cols(), this->get_lon_count());
       (lon_idx==(this->get_lon_count()-1)) ? fprintf(fid, "%c", '\n') : fprintf(fid, "%c", ',');
     }
   }
@@ -291,11 +316,21 @@ MappingError MapBase::update_all_(void) {
 
 
 
-SimpleMap::SimpleMap() {};
+SimpleMap::SimpleMap() :
+		MapBase(&WGS84, MapExtents(), MapResolution()) {
+		//TODO: Determine if this will work, given Eigen Ref<> usage
+		map_data_ref = Ref<this->map_data_>;
+}
 
-SimpleMap::SimpleMap(const MapExtents me, const MapResolution res) : MapBase(&WGS84, me, res) {};
+SimpleMap::SimpleMap(const MapExtents me, const MapResolution res) :
+		MapBase(&WGS84, me, res),
+		//TODO: Determine if this will work, given Eigen Ref<> usage
+		map_data_ref(Ref<map_data_>) {};
 
-SimpleMap::SimpleMap(const GeodeticDatumInterface* emi, const MapExtents me, const MapResolution res) : MapBase(emi, me, res) {};
+SimpleMap::SimpleMap(const GeodeticDatumInterface* emi, const MapExtents me, const MapResolution res) :
+		MapBase(emi, me, res),
+		//TODO: Determine if this will work, given Eigen Ref<> usage
+		map_data_ref(Ref<map_data_>) {};
 
 SimpleMap::~SimpleMap() {};
 

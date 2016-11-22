@@ -16,9 +16,9 @@ namespace Mapping {
 
 
 
-//	Setup logger
-Logger::NullLogger logger_proxy = Logger::NullLogger();
-Logger::LoggerInterface* logger = &logger_proxy;
+//	Setup logger hook
+//Logger::NullLogger logger_proxy = Logger::NullLogger();
+//Logger::LoggerInterface* logger = &logger_proxy;  //	'logger' declared extern in Mapping.h
 
 
 

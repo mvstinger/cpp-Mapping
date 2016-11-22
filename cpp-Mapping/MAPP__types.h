@@ -12,6 +12,13 @@
 
 #include <Eigen/Eigen>
 #include "MAPP__datums.h"
+#include "Logger.h"
+
+
+
+using Eigen::MatrixXd;
+using Eigen::Ref;
+
 
 
 namespace Mapping {
@@ -24,16 +31,12 @@ typedef unsigned int Idx;
 
 
 //	ERRORs
-
-//TODO: Convert to logger
 enum MappingError {
 	NO_ERROR = 0,
 	UNK_ERROR = 1,
 	WARNING_LAT_OOB = -10,
 	WARNING_LON_OOB = -11
 };
-//const uint WARNING_LAT_OOB = 1;
-//const uint WARNING_LON_OOB = 1;
 
 
 
@@ -125,7 +128,7 @@ public:
 protected:
   MapExtents map_extents_;
   MapResolution map_resolution_;
-  Eigen::MatrixXd map_data_;
+  MatrixXd map_data_;
   const GeodeticDatumInterface* datum_;
 
   double CALC_ALT_RES_ = 0.001;
@@ -149,6 +152,7 @@ public:
   //  Make pure virtual (make MapInterface ABC)
   virtual ~MapBase(void) = 0;
   static SimpleMap from_random(const int, const int, const double);
+  static SimpleMap from_squarediamond(const int, const int, const double);
 
   //  Getters/Setters
   double get_lat_min(void) const;
@@ -189,6 +193,8 @@ public:
 	SimpleMap(const GeodeticDatumInterface*, const MapExtents, const MapResolution);
 	SimpleMap(const SimpleMap&);
   ~SimpleMap(void);
+
+  Ref<MatrixXd> map_data_ref;
 };
 
 

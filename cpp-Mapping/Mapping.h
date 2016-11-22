@@ -11,17 +11,22 @@
 
 
 #include "Logger.h"
+#include "MAPP__datums.h"
+#include "MAPP__types.h"
+#include "MAPP__helpers.h"
+#include "MAPP__terrain_gen.h"
 
 
-
-using namespace Logger;
 
 
 namespace Mapping {
 
 
-LoggerInterface* logger = NullLogger();
 
+//	Assigned in Mapping.cc-
+//TODO: Will this avoid creation of new instances of 'logger' for each #include of 'Mapping.h' file?
+//TODO: Will this extend scope of variable beyond Mapping?
+//extern Logger::LoggerInterface* logger;
 
 
 

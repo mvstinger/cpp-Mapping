@@ -16,6 +16,9 @@ namespace Mapping {
 
 double rand_btwn(const double, const double);
 
+double randu(void);
+
+
 
 }
 
